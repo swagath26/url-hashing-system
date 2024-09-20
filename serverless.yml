@@ -1,0 +1,39 @@
+service: url-hashing-system
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    DYNAMODB_TABLE: UrlTable
+
+functions:
+  shortenUrl:
+    handler: handler.shortenUrl
+    events:
+      - http:
+          path: shorten-url
+          method: post
+  redirectUrl:
+    handler: handler.redirectUrl
+    events:
+      - http:
+          path: /{hash}
+          method: get
+
+resources:
+  Resources:
+    UrlTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        AttributeDefinitions:
+          - AttributeName: hash
+            AttributeType: S
+        KeySchema:
+          - AttributeName: hash
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+plugins:
+  - serverless-offline
